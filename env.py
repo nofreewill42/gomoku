@@ -59,11 +59,12 @@ class GomokuEnv:
 
         # Put 1/-1 on the board
         self.board[action] = self.player
-        self.player *= -1
         # Update possible actions
         self.possible_actions.remove(action)
         # Update action history
-        self.action_history.append(action)
+        self.action_history.append((action, self.player))
+        # Switch player
+        self.player *= -1
 
         # Check action outcome {1,-1,0,None}
         outcome = self._check_action_outcome(action)
