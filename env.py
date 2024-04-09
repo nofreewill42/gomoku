@@ -35,15 +35,19 @@ class GomokuEnv:
         self.board = np.zeros((self.N, self.M), dtype=np.int8)
         self.player = 1
         self.done = False
+        self.winner = 0
 
         self.action_history = []
         self.possible_actions = set((i, j) for i in range(self.N) for j in range(self.M))
 
         # Construct observation
         observation = {'board': self.board.copy(),
-                       'possible_actions': self.possible_actions.copy()}
+                       'possible_actions': self.possible_actions.copy(),
+                       'player': self.player,
+                       'winner': self.winner,
+                       'done': self.done}
         
-        return observation, self.player, self.possible_actions
+        return observation
     
     def step(self, action):
         """
@@ -63,23 +67,27 @@ class GomokuEnv:
         self.possible_actions.remove(action)
         # Update action history
         self.action_history.append((action, self.player))
-        # Switch player
-        self.player *= -1
 
         # Check action outcome {1,-1,0,None}
         outcome = self._check_action_outcome(action)
         if outcome is not None:
             self.done = True
-            winner = outcome
+            self.winner = outcome
         else:
-            winner = 0
+            self.winner = 0
 
         # Construct observation
         observation = {'board': self.board.copy(),
-                       'possible_actions': self.possible_actions.copy()}
+                       'possible_actions': self.possible_actions.copy(),
+                       'player': self.player,
+                       'winner': self.winner,
+                       'done': self.done}
+        
+        # Switch player
+        self.player *= -1
 
         # Return observation, player, possible actions, winner and done
-        return observation, self.player, self.possible_actions, winner, self.done
+        return observation
     
 
     def _check_action_outcome(self, action):
