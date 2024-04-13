@@ -1,29 +1,65 @@
-Just run
+# Gomoku engine
 
->python main.py
+### set up the environment
 
-```python
-from env import GomokuEnv
+```bash
+$ conda create --name gomoku python=3.10 -y
 
-# initialize the environment
-env = GomokuEnv.make(13)
-observation, player, possible_actions = env.reset()
-env.render()
+$ conda activate gomoku
 
-# take some random actions
-import random
-action = random.choice(list(possible_actions))
-print(f'Action taken: {action} by player {player}. Number of possible actions: {len(possible_actions)}')
-observation, player, possible_actions, winner, done = env.step(action)
-action = random.choice(list(possible_actions))
-print(f'Action taken: {action} by player {player}. Number of possible actions: {len(possible_actions)}')
-observation, player, possible_actions, winner, done = env.step(action)
-action = random.choice(list(possible_actions))
-print(f'Action taken: {action} by player {player}. Number of possible actions: {len(possible_actions)}')
-observation, player, possible_actions, winner, done = env.step(action)
-env.render()
+$ python -m pip install -r requirements.txt
 ```
 
-and you'll see.
+### Using the engine
 
-![image](https://github.com/nofreewill42/gomoku/assets/14865017/b522a788-78de-44ea-99b7-360443b2cf5e)
+```bash
+>>> from src.engine import GomokuEngine
+>>>
+>>> engine = GomokuEngine.make(3)
+>>> observation = engine.reset()
+>>> list(observation.keys())
+['board', 'possible_actions', 'player', 'winner', 'done']
+>>>
+>>> # render the board
+>>> engine.render()
+[[0 0 0]
+ [0 0 0]
+ [0 0 0]]
+>>>
+>>> actions = observation["possible_actions"]
+>>> actions
+{(0, 1), (1, 2), (2, 1), (0, 0), (1, 1), (2, 0), (0, 2), (2, 2), (1, 0)}
+>>> obs = engine.step((0, 1))
+>>>
+>>> engine.render()
+[[0 1 0]
+ [0 0 0]
+ [0 0 0]]
+>>>
+>>> obs["done"]
+False
+>>>
+>>> obs = engine.step((0, 0))
+>>> engine.render()
+[[-1  1  0]
+ [ 0  0  0]
+ [ 0  0  0]]
+>>>
+>>> obs = engine.step((1, 1))
+>>>
+>>> engine.render()
+[[-1  1  0]
+ [ 0  1  0]
+ [ 0  0  0]]
+>>>
+>>> obs = engine.step((0, 2))
+>>> obs = engine.step((2, 1))
+>>> engine.render()
+[[-1  1 -1]
+ [ 0  1  0]
+ [ 0  1  0]]
+>>>
+>>> obs["done"]
+True
+```
+
