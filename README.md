@@ -2,15 +2,15 @@ Just run
 
 >python main.py
 
-```
+```python
 from env import GomokuEnv
 
-\# initialize the environment
+# initialize the environment
 env = GomokuEnv.make(13)
 observation, player, possible_actions = env.reset()
 env.render()
 
-\# take some random actions
+# take some random actions
 import random
 action = random.choice(list(possible_actions))
 print(f'Action taken: {action} by player {player}. Number of possible actions: {len(possible_actions)}')
