@@ -1,231 +1,145 @@
-"""
-A gym-like environment for Gomoku.
+from typing import List
+from typing import Tuple
+from typing import Union
 
-# N x N is the board size if M is not provided, otherwise N x M
-env = GomokuEnv.make(N(,M))
-"""
 import numpy as np
+
+from src.state import Action
+from src.state import GameState
 
 
 class GomokuEngine:
-    def __init__(self, N, M=None):
+    """
+    A gym-like environment for Gomoku.
+    """
+
+    def __init__(
+        self, grid_size: Union[int, Tuple[int, int]], win_len: int = 5
+    ):
+        """initialize the game.
+        Players: 1 and -1.
+
+        Args:
+            grid_size (Union[int, Tuple[int, int]]):
+                size of the grid (e.g. 15x15).
+            win_size (int, optional):
+                Number of signs in a row to win the game. Defaults to 5.
         """
-        (N x N) board if M is not provided, otherwise (N x M)
-        player 1: 1, player 2: -1
-        board is from player 1's perspective (return board and player,
-            board*player might or might not be
-            advantageous to do with them regarding the
-            neural network architecture's perspective)
-        done: True if the game is over
-        action_history: list of (n, m, player) tuples in the order
-            of the actions taken
-        possible_actions: set of (n, m) tuples; to make it easier to
-            check if an action is valid
-
-        1. Create an instance either by calling GomokuEnv(N)
-            or GomokuEnv(N, M) or GomokuEnv.make(N) or GomokuEnv.make(N, M)
-        2. Then call reset() to get the initial observation and player
-        """
-        self.N = N
-        self.M = M if M else N
-
-    def make(N, M=None):
-        return GomokuEngine(N, M)
-
-    def reset(self):
-        """
-        Return:
-        - observation: {'board': np.array, 'possible_actions': set}
-        - player: 1 (let's say player 1 always starts first)
-        """
-
-        self.board = np.zeros((self.N, self.M), dtype=np.int8)
-        self.player = 1
-        self.done = False
-        self.winner = 0
-
-        self.action_history = []
-        self.possible_actions = set(
-            (i, j) for i in range(self.N) for j in range(self.M)
-        )
-
-        # Construct observation
-        observation = {
-            "board": self.board.copy(),
-            "possible_actions": self.possible_actions.copy(),
-            "player": self.player,
-            "winner": self.winner,
-            "done": self.done,
-        }
-
-        return observation
-
-    def step(self, action):
-        """
-        action: (n, m) tuple
-        Return:
-        - observation: {'board': np.array, 'possible_actions': set}
-        - winner: +1, -1, 0
-        - done: True, False
-        """
-        # Assert that the game is not over
-        # and the action is valid, complain otherwise
-        assert not self.done, "Game is already over"
-        assert action in self.possible_actions, "Invalid action"
-
-        # Put 1/-1 on the board
-        self.board[action] = self.player
-        # Update possible actions
-        self.possible_actions.remove(action)
-        # Update action history
-        self.action_history.append((action, self.player))
-
-        # Check action outcome {1,-1,0,None}
-        outcome = self._check_action_outcome(action)
-        if outcome is not None:
-            self.done = True
-            self.winner = outcome
+        if isinstance(grid_size, int):
+            self._grid_size = (grid_size, grid_size)
         else:
-            self.winner = 0
+            assert len(grid_size) == 2
+            self._grid_size = (grid_size[0], grid_size[1])
+        self._win_size = int(win_len)
 
-        # Construct observation
-        observation = {
-            "board": self.board.copy(),
-            "possible_actions": self.possible_actions.copy(),
-            "player": self.player,
-            "winner": self.winner,
-            "done": self.done,
-        }
+        self.reset()
 
-        # Switch player
-        self.player *= -1
+    @property
+    def state(self) -> GameState:
+        return self._state
 
-        # Return observation, player, possible actions, winner and done
-        return observation
+    @property
+    def history(self) -> List[GameState]:
+        return self._history
 
-    def _check_action_outcome(self, action):
-        """
-        action: (n, m) tuple
-        Check if the game is over:
-        - 5 in a row
-        - No more possible actions
-        Return:
-        - +1: Player 1 won
-        - -1: Player 2 won
-        - 0: Draw
-        - None: Game is not over yet
+    def reset(self) -> GameState:
+        """reset the game. Player 1 starts.
+
+        Returns:
+            GameState:
         """
 
-        # Check if the current player has won
-        def check_if_current_player_won(action):
-            """
-            Check if the current player has won
-            """
-            n, m = action
-            player = self.player
+        self._state = GameState(
+            board=np.zeros(self._grid_size, dtype=np.int8),
+            active_player=1,
+            winner=0,
+        )
+        self._history: List[GameState] = [self.state]
 
-            def check_row_won(n, m, player):
-                """
-                Grows to the left and right
-                """
-                count = 1
-                # Check left
-                left = m - 1
-                while left >= 0 and self.board[n, left] == player:
-                    count += 1
-                    left -= 1
-                # Check right
-                right = m + 1
-                while right < self.M and self.board[n, right] == player:
-                    count += 1
-                    right += 1
-                return count >= 5
+        return self.state
 
-            def check_col_won(n, m, player):
-                """
-                Grows up and down
-                """
-                count = 1
-                # Check up
-                up = n - 1
-                while up >= 0 and self.board[up, m] == player:
-                    count += 1
-                    up -= 1
-                # Check down
-                down = n + 1
-                while down < self.N and self.board[down, m] == player:
-                    count += 1
-                    down += 1
-                return count >= 5
+    def step(self, action: Action, check_action: bool = False) -> GameState:
+        """take action
 
-            def check_diag_won(n, m, player):
-                """
-                Grows diagonally up-left and down-right
-                """
-                count = 1
-                # Check up-left
-                up, left = n - 1, m - 1
-                while up >= 0 and left >= 0 and self.board[up, left] == player:
-                    count += 1
-                    up -= 1
-                    left -= 1
-                # Check down-right
-                down, right = n + 1, m + 1
-                while (
-                    down < self.N
-                    and right < self.M
-                    and self.board[down, right] == player
-                ):
-                    count += 1
-                    down += 1
-                    right += 1
-                return count >= 5
+        Args:
+            action (Action):
+            check_action (bool, optional): Defaults to False.
 
-            def check_anti_diag_won(n, m, player):
-                """
-                Grows diagonally up-right and down-left
-                """
-                count = 1
-                # Check up-right
-                up, right = n - 1, m + 1
-                while (
-                    up >= 0
-                    and right < self.M
-                    and self.board[up, right] == player
-                ):
-                    count += 1
-                    up -= 1
-                    right += 1
-                # Check down-left
-                down, left = n + 1, m - 1
-                while (
-                    down < self.N
-                    and left >= 0
-                    and self.board[down, left] == player
-                ):
-                    count += 1
-                    down += 1
-                    left -= 1
-                return count >= 5
+        Returns:
+            GameState: the next state.
+        """
 
-            # Won if any of the four directions has 5 in a row
-            if (
-                check_row_won(n, m, player)
-                or check_col_won(n, m, player)
-                or check_diag_won(n, m, player)
-                or check_anti_diag_won(n, m, player)
-            ):
+        if check_action:
+            assert not self.state.is_over
+            assert (
+                action in self.state.get_possible_actions()
+            ), f"invalid action {action}"
+
+        next_state = self.state.copy()
+        next_state.board[action.row, action.col] = self.state.active_player
+        if self.has_game_ended(
+            next_state.board, action.row, action.col, self._win_size
+        ):
+            next_state.winner = self.state.active_player
+
+        next_state.active_player = -self.state.active_player
+
+        self._state = next_state
+        self._history.append(self.state)
+
+        return self.state
+
+    @staticmethod
+    def has_game_ended(
+        board: np.ndarray, row: int, col: int, win_size: int
+    ) -> bool:
+        """check whether a player won or not.
+
+        Args:
+            board (np.ndarray): the game board
+            row (int): row location of latest action
+            col (int): col location of latest action
+            win_size (int): number of consecutive marks needed to win.
+
+        Returns:
+            bool:
+        """
+        board_mod = board * board[row, col]
+        board_mod[board_mod == -1] = 0
+
+        vecs_to_check = [
+            board_mod[row],
+            board_mod[:, col],
+            np.diag(board_mod, col - row),
+            np.diag(board_mod[:, ::-1], board_mod.shape[1] - 1 - col - row),
+        ]
+
+        for vec in vecs_to_check:
+            if GomokuEngine.longest_consecutive_len(vec) >= win_size:
                 return True
-            return False
 
-        # Did current player win?
-        if check_if_current_player_won(action):
-            return self.player  # {1,-1}
-        # No more possible actions remaining without winning?
-        if len(self.possible_actions) == 0:
+        return False
+
+    @staticmethod
+    def longest_consecutive_len(vec: np.ndarray) -> int:
+        """_summary_
+
+        Args:
+            vec (np.ndarray): vector of 0s and 1s
+
+        Returns:
+            int: length of longest consecutive 1s
+        """
+        if np.all(vec == 0):
             return 0
-        # If neither, the game is not over yet
-        return None
+
+        vec = np.concatenate([[0], vec, [0]])
+        diff = np.diff(vec)
+        start = np.where(diff == 1)[0]
+        end = np.where(diff == -1)[0]
+        len_1s = end - start
+        max_len = int(np.max(len_1s))
+        return max_len
 
     def render(self):
-        print(self.board)
+        print(self.state.board)
