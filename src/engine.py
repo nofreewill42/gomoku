@@ -6,7 +6,7 @@ env = GomokuEnv.make(N(,M))  # N x N is the board size if M is not provided, oth
 
 import numpy as np
 
-class GomokuEnv:
+class GomokuEngine:
     def __init__(self, N, M=None):
         """
         (N x N) board if M is not provided, otherwise (N x M)
@@ -23,7 +23,7 @@ class GomokuEnv:
         self.M = M if M else N
     
     def make(N, M=None):
-        return GomokuEnv(N, M)
+        return GomokuEngine(N, M)
 
     def reset(self):
         """
