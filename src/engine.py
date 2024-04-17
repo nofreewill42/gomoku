@@ -2,6 +2,7 @@ from typing import List
 from typing import Tuple
 from typing import Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from src.state import Action
@@ -42,6 +43,14 @@ class GomokuEngine:
     def history(self) -> List[GameState]:
         return self._history
 
+    @property
+    def win_len(self) -> int:
+        return self._win_size
+
+    @property
+    def active_player(self) -> int:
+        return self.state.active_player
+
     def reset(self) -> GameState:
         """reset the game. Player 1 starts.
 
@@ -81,8 +90,8 @@ class GomokuEngine:
             next_state.board, action.row, action.col, self._win_size
         ):
             next_state.winner = self.state.active_player
-
-        next_state.active_player = -self.state.active_player
+        else:
+            next_state.active_player = -self.state.active_player
 
         self._state = next_state
         self._history.append(self.state)
@@ -142,4 +151,14 @@ class GomokuEngine:
         return max_len
 
     def render(self):
-        print(self.state.board)
+        plt.figure(figsize=(8, 8))
+        plt.imshow(self.state.board, cmap="viridis", interpolation="none")
+
+        # Adding grid lines
+        plt.grid(which="major", color="w", linestyle="-", linewidth=2)
+        plt.xticks(np.arange(-0.5, 20, 1), [])
+        plt.yticks(np.arange(-0.5, 20, 1), [])
+
+        plt.colorbar()
+
+        plt.show()
