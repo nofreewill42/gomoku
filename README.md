@@ -37,7 +37,7 @@ $ pre-commit run --files some_file.py some_file_2.py
 >>> from src.state import Action
 >>>
 >>> engine = GomokuEngine(3, win_len=3)
->>> engine.render()
+>>> print(engine.state.board)
 [[0 0 0]
  [0 0 0]
  [0 0 0]]
@@ -48,14 +48,14 @@ $ pre-commit run --files some_file.py some_file_2.py
 Action(row=0, col=0)
 >>>
 >>> state = engine.step(actions[0])
->>> engine.render()
+>>> print(engine.state.board)
 [[1 0 0]
  [0 0 0]
  [0 0 0]]
 >>>
 >>> actions = engine.state.get_possible_actions()
 >>> state = engine.step(actions[0])
->>> engine.render()
+>>> print(engine.state.board)
 [[ 1 -1  0]
  [ 0  0  0]
  [ 0  0  0]]
@@ -63,7 +63,7 @@ Action(row=0, col=0)
 >>> actions = engine.state.get_possible_actions()
 >>> state = engine.step(actions[2])
 >>>
->>> engine.render()
+>>> print(engine.state.board)
 [[ 1 -1  0]
  [ 0  1  0]
  [ 0  0  0]]
@@ -73,7 +73,7 @@ Action(row=0, col=0)
 False
 >>>
 >>> engine.step(Action(row=2, col=2))
->>> engine.render()
+>>> print(engine.state.board)
 [[ 1 -1  0]
  [-1  1  0]
  [ 0  0  1]]
