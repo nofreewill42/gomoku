@@ -2,7 +2,6 @@ from typing import List
 from typing import Tuple
 from typing import Union
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from src.state import Action
@@ -151,14 +150,4 @@ class GomokuEngine:
         return max_len
 
     def render(self):
-        plt.figure(figsize=(8, 8))
-        plt.imshow(self.state.board, cmap="viridis", interpolation="none")
-
-        # Adding grid lines
-        plt.grid(which="major", color="w", linestyle="-", linewidth=2)
-        plt.xticks(np.arange(-0.5, 20, 1), [])
-        plt.yticks(np.arange(-0.5, 20, 1), [])
-
-        plt.colorbar()
-
-        plt.show()
+        self.state.render()
