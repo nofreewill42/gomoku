@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,7 +35,13 @@ class GameState:
         )
 
     def render(
-        self, figsize_factor=0.7, marker_size=500, cmap="binary", probs=None
+        self,
+        figsize_factor=0.7,
+        marker_size=500,
+        cmap="binary",
+        probs=None,
+        highlight: Optional[Action] = None,
+        show_title: bool = True,
     ):
         plt.figure(
             figsize=(
@@ -61,5 +68,24 @@ class GameState:
         plt.scatter(
             c, r, marker="o", facecolors="none", edgecolors="k", s=marker_size
         )
+
+        if show_title:
+            if not self.is_over:
+                player_sign = {1: "X", -1: "O"}[self.active_player]
+                plt.title(f"active player: {player_sign}")
+            elif self.winner:
+                player_sign = {1: "X", -1: "O"}[self.winner]
+                plt.title(f"Game Over. Winner: {player_sign}")
+            else:
+                plt.title("Game Over. Draw.")
+
+        if highlight is not None:
+            r, c = highlight.row, highlight.col
+            plt.plot(
+                [c - 0.5, c - 0.5, c + 0.5, c + 0.5, c - 0.5],
+                [r - 0.5, r + 0.5, r + 0.5, r - 0.5, r - 0.5],
+                c="red",
+                linewidth=4.0,
+            )
 
         plt.show()
