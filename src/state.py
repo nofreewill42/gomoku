@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List
-from typing import Optional
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -40,7 +40,7 @@ class GameState:
         marker_size=500,
         cmap="binary",
         probs=None,
-        highlight: Optional[Action] = None,
+        highlight: Union[List[Action], Action] = [],
         show_title: bool = True,
     ):
         plt.figure(
@@ -79,8 +79,11 @@ class GameState:
             else:
                 plt.title("Game Over. Draw.")
 
-        if highlight is not None:
-            r, c = highlight.row, highlight.col
+        if isinstance(highlight, Action):
+            highlight = [highlight]
+
+        for action in highlight:
+            r, c = action.row, action.col
             plt.plot(
                 [c - 0.5, c - 0.5, c + 0.5, c + 0.5, c - 0.5],
                 [r - 0.5, r + 0.5, r + 0.5, r - 0.5, r - 0.5],
